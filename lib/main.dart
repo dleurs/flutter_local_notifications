@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:local_notifications/notification_service.dart';
 
-void main() {
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
+
+import 'package:timezone/timezone.dart' as tz;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.init();
   runApp(MyApp());
 }
 
@@ -52,6 +60,21 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            TextButton(
+                onPressed: () async {
+                  if (Platform.isIOS) {
+                    var value =
+                        await NotificationService.instance.requestPermissions(alert: true, badge: true, sound: true);
+                    print('Notification permission on iOS  : ' + value.toString());
+                  }
+                  var now = tz.TZDateTime.now(tz.local);
+                  var scheduleDate = tz.TZDateTime.local(now.year, now.month, now.day, now.hour, now.minute, now.second + 5);
+                  //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+                  //var scheduleDate = tz.TZDateTime.local(2021, 9, 13, 15, 5);
+                  await NotificationService.instance.zonedScheduleNotification(
+                      title: "Event incoming", body: "Super event", scheduledDate: scheduleDate);
+                },
+                child: Text('Notifications in 5 seconds'))
           ],
         ),
       ),
